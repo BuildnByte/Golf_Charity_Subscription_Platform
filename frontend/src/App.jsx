@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Charities from './pages/Charities';
 import AdminDrawPanel from './pages/AdminDrawPanel';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminCharitiesPanel from './pages/AdminCharitiesPanel';
 import MyWinnings from './pages/MyWinnings';
 import Pricing from './pages/Pricing';
 import Home from './pages/Home';
@@ -75,6 +76,14 @@ function App() {
             element={
               <AdminRoute>
                 <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/charities"
+            element={
+              <AdminRoute>
+                <AdminCharitiesPanel />
               </AdminRoute>
             }
           />

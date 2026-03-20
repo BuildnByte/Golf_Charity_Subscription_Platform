@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Trophy, Play, CheckCircle } from 'lucide-react';
+import { LayoutDashboard, Users, Trophy, Play, CheckCircle, Heart } from 'lucide-react';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState(null);
@@ -58,9 +58,14 @@ export default function AdminDashboard() {
 
                 <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-extrabold text-gray-900">Dashboard Overview</h2>
-                    <Link to="/admin/draw" className="bg-indigo-600 text-white px-6 py-2 rounded-lg flex gap-2 items-center hover:bg-indigo-700 font-medium tracking-wide">
-                        <Play size={18} /> Go to Draw Panel
-                    </Link>
+                    <div className="flex gap-4">
+                        <Link to="/admin/charities" className="bg-pink-600 text-white px-6 py-2 rounded-lg flex gap-2 items-center hover:bg-pink-700 font-bold tracking-wide shadow-md">
+                            <Heart size={18} className="fill-white" /> Manage Charities
+                        </Link>
+                        <Link to="/admin/draw" className="bg-indigo-600 text-white px-6 py-2 rounded-lg flex gap-2 items-center hover:bg-indigo-700 font-bold tracking-wide shadow-md">
+                            <Play size={18} className="fill-white" /> Run Draw Engine
+                        </Link>
+                    </div>
                 </div>
 
                 {stats && (
