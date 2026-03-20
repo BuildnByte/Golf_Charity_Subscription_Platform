@@ -59,6 +59,18 @@ router.post('/winners/:id/pay', async (req, res) => {
     res.json({ message: 'Marked as paid', winner: data });
 });
 
+router.post('/winners/:id/reject', async (req, res) => {
+    const supabase = getClient(req);
+    const { data, error } = await supabase
+        .from('winners')
+        .update({ status: 'rejected' })
+        .eq('id', req.params.id)
+        .select()
+        .single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ message: 'Verification application rejected systematically', winner: data });
+});
+
 router.post('/draw/run', async (req, res) => {
     const supabase = getClient(req);
 

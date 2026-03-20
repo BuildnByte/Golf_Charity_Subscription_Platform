@@ -31,7 +31,7 @@ router.post('/:id/screenshot', async (req, res) => {
 
     const { data, error } = await supabase
         .from('winners')
-        .update({ screenshot_url })
+        .update({ screenshot_url, status: 'pending' })
         .eq('id', req.params.id)
         .eq('user_id', req.user.id)
         .select()

@@ -20,17 +20,31 @@ router.use(requireAuth);
 
 router.post('/create-order', async (req, res) => {
     try {
+        const { type, amount, charity_id } = req.body; // 'monthly' | 'yearly' | 'donation'
+
+        let orderAmount = 800 * 100; // Monthly equivalent (₹800)
+        if (type === 'yearly') orderAmount = 8000 * 100; // Yearly
+        if (type === 'donation') {
+            if (!amount || amount < 100) return res.status(400).json({ error: 'Minimum donation is ₹100' });
+            orderAmount = amount * 100;
+        }
+
         const options = {
-            amount: 800 * 100, // ₹800.00 mapping realistically to ~$10 plan
+            amount: orderAmount,
             currency: "INR",
-            receipt: `rcpt_${req.user.id.substring(0, 8)}_${Date.now()}`
+            receipt: `rcpt_${req.user.id.substring(0, 8)}_${Date.now()}`,
+            notes: {
+                payment_type: type || 'monthly',
+                charity_id: charity_id || ''
+            }
         };
 
+        // Server securely generates the official order request
         const order = await razorpay.orders.create(options);
-        res.json({ order_id: order.id, amount: options.amount, currency: options.currency });
+        res.json({ order_id: order.id, amount: options.amount, currency: options.currency, notes: options.notes });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Failed to create Razorpay Order' });
+        res.status(500).json({ error: 'Failed to securely construct Razorpay Order' });
     }
 });
 
@@ -38,7 +52,7 @@ router.post('/verify', async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-        return res.status(400).json({ error: 'Missing payment details' });
+        return res.status(400).json({ error: 'Missing security tokens' });
     }
 
     try {
@@ -49,29 +63,57 @@ router.post('/verify', async (req, res) => {
             .digest("hex");
 
         if (expectedSignature !== razorpay_signature) {
-            return res.status(400).json({ error: 'Invalid payment signature' });
+            return res.status(400).json({ error: 'Invalid HMAC signature provided' });
         }
+
+        // Fetch securely from Razorpay servers to ensure notes haven't been tampered
+        const rzpOrder = await razorpay.orders.fetch(razorpay_order_id);
+        const type = rzpOrder.notes?.payment_type || 'monthly';
+        const charity_id = rzpOrder.notes?.charity_id;
 
         const supabase = getClient(req);
 
-        const { data, error } = await supabase
-            .from('subscriptions')
-            .upsert({
-                user_id: req.user.id,
-                razorpay_order_id,
-                razorpay_payment_id,
-                status: 'active',
-                plan_id: 'standard_10'
-            }, { onConflict: 'user_id' })
-            .select()
-            .single();
+        if (type === 'donation') {
+            const { data, error } = await supabase
+                .from('donations')
+                .insert([{
+                    user_id: req.user.id,
+                    charity_id: charity_id,
+                    amount: rzpOrder.amount / 100,
+                    status: 'successful',
+                    razorpay_order_id,
+                    razorpay_payment_id
+                }]);
+            if (error) throw error;
+            return res.json({ message: 'Donation securely verified!', type: 'donation' });
+        } else {
+            // Subscription dynamic mapping
+            const currentPeriodEnd = new Date();
+            if (type === 'yearly') {
+                currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 1);
+            } else {
+                currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
+            }
 
-        if (error) throw error;
+            const { data, error } = await supabase
+                .from('subscriptions')
+                .upsert({
+                    user_id: req.user.id,
+                    razorpay_order_id,
+                    razorpay_payment_id,
+                    status: 'active',
+                    plan_id: type,
+                    current_period_end: currentPeriodEnd.toISOString()
+                }, { onConflict: 'user_id' })
+                .select()
+                .single();
 
-        res.json({ message: 'Payment cryptographically verified and subscription activated!', subscription: data });
+            if (error) throw error;
+            return res.json({ message: 'Cryptographic mapping executed. Subscription properly activated!', subscription: data, type });
+        }
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Cryptographic verification failed' });
+        res.status(500).json({ error: 'Systematic verification failed securely' });
     }
 });
 

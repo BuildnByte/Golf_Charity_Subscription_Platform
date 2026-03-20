@@ -16,7 +16,7 @@ export default function Register() {
             setError('');
             setLoading(true);
             await register(email, password);
-            navigate('/');
+            navigate('/charities');
         } catch (err) {
             setError(err.message || 'Failed to register');
         } finally {

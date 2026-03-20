@@ -25,7 +25,7 @@ export default function AdminDashboard() {
             setWinners(wRes.data.winners);
         } catch (err) {
             console.error(err);
-            if (err.response?.status === 403) navigate('/');
+            if (err.response?.status === 403) navigate('/admin');
         }
     };
 
@@ -35,6 +35,15 @@ export default function AdminDashboard() {
             fetchData();
         } catch (err) {
             alert('Failed to update status');
+        }
+    };
+
+    const handleReject = async (id) => {
+        try {
+            await api.post(`/admin/winners/${id}/reject`);
+            fetchData();
+        } catch (err) {
+            alert('Failed to reject application');
         }
     };
 
@@ -113,7 +122,10 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="p-4">
                                                 {w.status === 'pending' && (
-                                                    <button onClick={() => handlePay(w.id)} className="bg-gray-900 text-white px-3 py-1.5 rounded-md hover:bg-gray-800 font-medium transition-colors text-xs whitespace-nowrap">Mark Paid</button>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => handlePay(w.id)} className="bg-gray-900 text-white px-3 py-1.5 rounded-md hover:bg-gray-800 font-medium transition-colors text-xs whitespace-nowrap">Mark Paid</button>
+                                                        <button onClick={() => handleReject(w.id)} className="bg-red-100 text-red-700 px-3 py-1.5 rounded-md hover:bg-red-200 font-medium transition-colors text-xs whitespace-nowrap">Reject ID</button>
+                                                    </div>
                                                 )}
                                             </td>
                                         </tr>

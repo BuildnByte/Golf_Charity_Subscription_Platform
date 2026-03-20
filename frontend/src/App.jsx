@@ -9,13 +9,19 @@ import AdminDrawPanel from './pages/AdminDrawPanel';
 import AdminDashboard from './pages/AdminDashboard';
 import MyWinnings from './pages/MyWinnings';
 import Pricing from './pages/Pricing';
+import Home from './pages/Home';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-
   if (loading) return <div>Loading...</div>;
   if (!user) return <Navigate to="/login" />;
+  return children;
+};
 
+const AdminRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <div>Loading...</div>;
+  if (!user || user.role !== 'admin') return <Navigate to="/dashboard" />;
   return children;
 };
 
@@ -28,6 +34,12 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route
             path="/"
+            element={
+              <Home />
+            }
+          />
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
@@ -53,17 +65,17 @@ function App() {
           <Route
             path="/admin/draw"
             element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <AdminDrawPanel />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
           <Route
             path="/admin"
             element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <AdminDashboard />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
           <Route

@@ -42,10 +42,30 @@ router.post('/login', async (req, res) => {
         return res.status(400).json({ error: error.message });
     }
 
+    // Generate authenticated client using the newly acquired session to bypass RLS
+    const authenticatedClient = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_ANON_KEY,
+        { global: { headers: { Authorization: `Bearer ${data.session.access_token}` } } }
+    );
+
+    const { data: dbUser } = await authenticatedClient
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+    const mergedUser = {
+        ...data.user,
+        role: dbUser?.role || 'user'
+    };
+
+    console.log(mergedUser);
+
     res.json({
         message: 'Login successful',
         session: data.session,
-        user: data.user
+        user: mergedUser
     });
 });
 

@@ -29,17 +29,26 @@ router.get('/', async (req, res) => {
 
 // POST /charities/select
 router.post('/select', requireAuth, async (req, res) => {
-    const { charity_id } = req.body;
+    const { charity_id, charity_percentage } = req.body;
     const userId = req.user.id;
     const supabase = getClient(req);
 
-    if (!charity_id) {
-        return res.status(400).json({ error: 'Charity ID is required' });
+    let updateData = {};
+    if (charity_id) updateData.selected_charity_id = charity_id;
+    if (charity_percentage) {
+        if (charity_percentage < 10 || charity_percentage > 100) {
+            return res.status(400).json({ error: 'Charity percentage must uniquely float exactly bounded between 10% and 100%' });
+        }
+        updateData.charity_percentage = charity_percentage;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ error: 'Provide comprehensive charity selections legitimately configuring user data' });
     }
 
     const { data, error } = await supabase
         .from('users')
-        .update({ selected_charity_id: charity_id })
+        .update(updateData)
         .eq('id', userId)
         .select()
         .single();

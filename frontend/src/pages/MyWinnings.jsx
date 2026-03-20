@@ -56,7 +56,7 @@ export default function MyWinnings() {
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6">
             <div className="max-w-4xl mx-auto">
-                <Link to="/" className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-8 font-medium">
+                <Link to="/dashboard" className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-8 font-medium">
                     <ArrowLeft size={16} /> Back to Dashboard
                 </Link>
 
@@ -87,14 +87,32 @@ export default function MyWinnings() {
                                 </div>
 
                                 <div className="flex flex-col items-start md:items-end gap-2">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${w.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                    <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide ${w.status === 'paid' ? 'bg-green-100 text-green-800' : w.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                         {w.status}
                                     </span>
+
+                                    {w.status === 'rejected' && (
+                                        <div className="mt-2 text-right">
+                                            <p className="text-sm text-red-600 font-bold mb-2">Verification Rejected - Please re-upload valid proof of ID</p>
+                                            <div>
+                                                <label className="cursor-pointer inline-flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-lg font-bold hover:bg-red-100 transition-colors">
+                                                    {uploadingId === w.id ? 'Uploading...' : <><UploadCloud size={18} /> Try Uploading Again</>}
+                                                    <input
+                                                        type="file"
+                                                        className="hidden"
+                                                        accept="image/png, image/jpeg"
+                                                        onChange={(e) => handleUpload(e, w.id)}
+                                                        disabled={uploadingId === w.id}
+                                                    />
+                                                </label>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {w.status === 'pending' && (
                                         <div className="mt-2 text-right">
                                             {w.screenshot_url ? (
-                                                <p className="text-sm text-indigo-600 font-medium">Verification Submitted - Awaiting Admin Review</p>
+                                                <p className="text-sm text-indigo-600 font-bold">Verification Submitted - Awaiting Admin Review</p>
                                             ) : (
                                                 <div>
                                                     <label className="cursor-pointer inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg font-medium hover:bg-indigo-100 transition-colors">
