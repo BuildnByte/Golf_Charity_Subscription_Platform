@@ -46,4 +46,29 @@ const requireAdmin = async (req, res, next) => {
     next();
 };
 
-module.exports = { requireAuth, requireAdmin };
+const requireSubscription = async (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const subSupabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_ANON_KEY,
+        { global: { headers: { Authorization: req.headers.authorization } } }
+    );
+
+    const { data: subData, error } = await subSupabase
+        .from('subscriptions')
+        .select('status')
+        .eq('user_id', req.user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+    if (error || !subData) {
+        return res.status(403).json({ error: 'Active subscription required. Please purchase a plan first.' });
+    }
+
+    next();
+};
+
+module.exports = { requireAuth, requireAdmin, requireSubscription };

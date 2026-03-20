@@ -8,6 +8,7 @@ import Charities from './pages/Charities';
 import AdminDrawPanel from './pages/AdminDrawPanel';
 import AdminDashboard from './pages/AdminDashboard';
 import MyWinnings from './pages/MyWinnings';
+import Pricing from './pages/Pricing';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -30,6 +31,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pricing"
+            element={
+              <ProtectedRoute>
+                <Pricing />
               </ProtectedRoute>
             }
           />

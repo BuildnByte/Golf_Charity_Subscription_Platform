@@ -7,6 +7,7 @@ const scoreRoutes = require('./src/routes/scores');
 const charityRoutes = require('./src/routes/charities');
 const adminRoutes = require('./src/routes/admin');
 const winnerRoutes = require('./src/routes/winners');
+const paymentRoutes = require('./src/routes/payment');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,6 +20,7 @@ app.use('/scores', scoreRoutes);
 app.use('/charities', charityRoutes);
 app.use('/admin', adminRoutes);
 app.use('/winners', winnerRoutes);
+app.use('/payment', paymentRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

@@ -47,7 +47,7 @@ export default function Dashboard() {
                                 Active
                             </div>
                         </div>
-                        <Link to="#" className="mt-4 text-sm text-indigo-600 font-medium hover:underline">Manage Plan</Link>
+                        <Link to="/pricing" className="mt-4 text-sm text-indigo-600 font-medium hover:underline">Purchase Active Plan</Link>
                     </div>
 
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">

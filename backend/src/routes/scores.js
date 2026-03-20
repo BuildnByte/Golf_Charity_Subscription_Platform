@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireSubscription } = require('../middleware/auth');
 
 // Protected routes
 router.use(requireAuth);
@@ -37,7 +37,7 @@ router.get('/:userId', async (req, res) => {
 });
 
 // POST /scores
-router.post('/', async (req, res) => {
+router.post('/', requireSubscription, async (req, res) => {
     const { score, date } = req.body;
     const userId = req.user.id;
     const supabase = getClient(req);
