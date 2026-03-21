@@ -8,15 +8,18 @@ const supabase = createClient(
 );
 
 router.post('/register', async (req, res) => {
-    const { email, password } = req.body;
-    console.log(req.body);
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
+    const { email, password, charity_id } = req.body;
+
+    if (!email || !password || !charity_id) {
+        return res.status(400).json({ error: 'Email, password, and charity selection are critically required' });
     }
 
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+            data: { charity_id }
+        }
     });
 
     if (error) {
@@ -60,7 +63,7 @@ router.post('/login', async (req, res) => {
         role: dbUser?.role || 'user'
     };
 
-    console.log(mergedUser);
+    
 
     res.json({
         message: 'Login successful',

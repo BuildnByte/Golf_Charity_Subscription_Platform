@@ -74,17 +74,22 @@ router.post('/verify', async (req, res) => {
         const supabase = getClient(req);
 
         if (type === 'donation') {
+            const amountNumeric = rzpOrder.amount / 100;
             const { data, error } = await supabase
                 .from('donations')
                 .insert([{
                     user_id: req.user.id,
                     charity_id: charity_id,
-                    amount: rzpOrder.amount / 100,
+                    amount: amountNumeric,
                     status: 'successful',
                     razorpay_order_id,
                     razorpay_payment_id
                 }]);
             if (error) throw error;
+
+            // Execute RPC securely allocating funds
+            await supabase.rpc('increment_charity_amount', { p_charity_id: charity_id, p_amount: amountNumeric });
+
             return res.json({ message: 'Donation securely verified!', type: 'donation' });
         } else {
             // Subscription dynamic mapping
@@ -109,6 +114,33 @@ router.post('/verify', async (req, res) => {
                 .single();
 
             if (error) throw error;
+
+            // Fetch explicitly mapped User Charity settings naturally
+            const { data: userProfile } = await supabase
+                .from('users')
+                .select('charity_percentage, selected_charity_id')
+                .eq('id', req.user.id)
+                .single();
+
+            if (userProfile && userProfile.selected_charity_id) {
+                const charityPercentage = userProfile.charity_percentage || 10;
+                const baseAmount = type === 'yearly' ? 8000 : 800;
+                const donationAmount = baseAmount * (charityPercentage / 100);
+
+                // Insert into tracking log safely
+                await supabase.from('donations').insert([{
+                    user_id: req.user.id,
+                    charity_id: userProfile.selected_charity_id,
+                    amount: donationAmount,
+                    status: 'successful',
+                    razorpay_order_id,
+                    razorpay_payment_id
+                }]);
+
+                // Update Charity Gross amount securely bypassing standard RLS organically
+                await supabase.rpc('increment_charity_amount', { p_charity_id: userProfile.selected_charity_id, p_amount: donationAmount });
+            }
+
             return res.json({ message: 'Cryptographic mapping executed. Subscription properly activated!', subscription: data, type });
         }
     } catch (err) {

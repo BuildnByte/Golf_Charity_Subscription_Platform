@@ -11,6 +11,12 @@ export default function Dashboard() {
 
     const [scores, setScores] = useState([]);
 
+    // Charity preferences state structurally loaded natively
+    const [charityProfile, setCharityProfile] = useState(null);
+    const [charityList, setCharityList] = useState([]);
+    const [isEditingCharity, setIsEditingCharity] = useState(false);
+    const [tempCharityId, setTempCharityId] = useState('');
+
     const fetchScores = async () => {
         if (!user) return;
         try {
@@ -22,19 +28,39 @@ export default function Dashboard() {
     };
 
     useEffect(() => {
-        const fetchSub = async () => {
+        const fetchSubAndProfile = async () => {
             try {
                 const res = await api.get('/user/subscription');
                 setSub(res.data.subscription);
+
+                const profileRes = await api.get('/user/profile');
+                if (profileRes.data.profile) {
+                    setCharityProfile(profileRes.data.profile);
+                    setTempCharityId(profileRes.data.profile.selected_charity_id || '');
+                }
+
+                const charitiesRes = await api.get('/charities');
+                setCharityList(charitiesRes.data.charities);
             } catch (err) {
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         };
-        fetchSub();
+        fetchSubAndProfile();
         fetchScores();
     }, []);
+
+    const saveCharityPreference = async () => {
+        try {
+            await api.put('/user/profile', { selected_charity_id: tempCharityId });
+            setCharityProfile(prev => ({ ...prev, selected_charity_id: tempCharityId, charities: charityList.find(c => c.id === tempCharityId) }));
+            setIsEditingCharity(false);
+            alert('Your active Charity mapping has explicitly securely updated!');
+        } catch (err) {
+            alert('Failed to systematically mutate charity configuration.');
+        }
+    };
 
     const isSubActive = sub?.status === 'active';
     const subEndDate = sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : 'N/A';
@@ -109,6 +135,77 @@ export default function Dashboard() {
                         <Link to="/charities" className="mt-6 text-sm text-indigo-600 font-bold hover:text-indigo-800 transition-colors">Select Featured Charity &rarr;</Link>
                     </div>
                 </div>
+
+                {/* Secure Charity Management Controller */}
+                {charityProfile && (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
+                        <div className="flex justify-between items-start flex-col gap-4 md:flex-row md:items-center">
+                            <div>
+                                <h2 className="text-2xl font-black text-gray-900">My Supported Charity</h2>
+                                <p className="text-gray-500 text-sm mt-1">Configure exactly where your next automated subscription Split goes.</p>
+                            </div>
+                            <div className="bg-rose-50 border border-rose-100 text-rose-800 px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide">
+                                Active Split: {charityProfile.charity_percentage}%
+                            </div>
+                        </div>
+
+                        <div className={`mt-6 bg-gray-50 border border-gray-200 p-5 rounded-2xl flex flex-col gap-5 ${isEditingCharity ? 'w-full' : 'md:flex-row md:items-center justify-between'}`}>
+                            <div className="flex items-center gap-4 flex-shrink-0">
+                                <div className="w-14 h-14 bg-white shadow-sm border border-gray-100 rounded-xl flex justify-center items-center text-rose-500">
+                                    <History size={26} className="stroke-[2.5]" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-bold text-gray-400 mb-0.5 uppercase tracking-wider">Currently Routing to</p>
+                                    <p className="text-lg font-extrabold text-gray-900">
+                                        {isEditingCharity
+                                            ? charityList.find(c => c.id === tempCharityId)?.name || 'Select a charity below'
+                                            : charityProfile.charities?.name || 'No Default Charity Selected'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {!isEditingCharity && (
+                                <div>
+                                    <button onClick={() => setIsEditingCharity(true)} className="px-5 py-2.5 text-sm font-bold bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm transition-all focus:outline-none">
+                                        Change Charity
+                                    </button>
+                                </div>
+                            )}
+
+                            {isEditingCharity && (
+                                <div className="w-full mt-2 pt-5 border-t border-gray-200 animate-in fade-in duration-300">
+                                    <p className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider flex justify-between items-center">
+                                        <span>Select a Foundation to Support</span>
+                                    </p>
+
+                                    <div className="flex gap-4 overflow-x-auto pb-4 snap-x custom-scrollbar">
+                                        {charityList.map(c => (
+                                            <div
+                                                key={c.id}
+                                                onClick={() => setTempCharityId(c.id)}
+                                                className={`flex-shrink-0 w-64 rounded-xl border-2 cursor-pointer transition-all snap-start overflow-hidden select-none ${tempCharityId === c.id ? 'border-indigo-600 shadow-md ring-4 ring-indigo-50 bg-white scale-[1.02]' : 'border-gray-200 bg-white hover:border-indigo-300'}`}
+                                            >
+                                                <div className="h-28 bg-gray-100 relative">
+                                                    {c.is_featured && <span className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-[10px] font-black uppercase px-2 py-0.5 rounded shadow z-10">Spotlight</span>}
+                                                    <img src={c.image_url || `https://placehold.co/400x200/4f46e5/ffffff?text=${encodeURIComponent(c.name)}&font=Montserrat`} alt={c.name} className="w-full h-full object-cover" />
+                                                </div>
+                                                <div className="p-4">
+                                                    <p className="font-extrabold text-gray-900 truncate">{c.name}</p>
+                                                    <p className="text-xs text-gray-600 line-clamp-2 mt-1.5 leading-relaxed">{c.description}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex items-center gap-3 mt-4 justify-end">
+                                        <button onClick={() => setIsEditingCharity(false)} className="px-5 py-2.5 text-sm font-bold text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">Cancel</button>
+                                        <button onClick={saveCharityPreference} disabled={!tempCharityId} className="px-6 py-2.5 text-sm font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition-all focus:outline-none disabled:opacity-50">Save Route</button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Score Entry Form Integration */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">

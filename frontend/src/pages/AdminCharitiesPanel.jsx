@@ -104,6 +104,7 @@ export default function AdminCharitiesPanel() {
                                 <tr className="bg-gray-50 border-b border-gray-200">
                                     <th className="p-4 uppercase text-xs font-bold text-gray-500 tracking-wider">Charity Details</th>
                                     <th className="p-4 uppercase text-xs font-bold text-gray-500 tracking-wider">Status</th>
+                                    <th className="p-4 uppercase text-xs font-bold text-gray-500 tracking-wider text-right">Raised</th>
                                     <th className="p-4 uppercase text-xs font-bold text-gray-500 tracking-wider text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -125,6 +126,9 @@ export default function AdminCharitiesPanel() {
                                             ) : (
                                                 <span className="text-gray-400 text-sm font-medium">Standard</span>
                                             )}
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <span className="font-extrabold text-green-600 tracking-tight">₹{(c.amount_raised || 0).toLocaleString()}</span>
                                         </td>
                                         <td className="p-4 text-right">
                                             <div className="flex items-center justify-end gap-2">

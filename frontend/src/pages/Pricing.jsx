@@ -7,6 +7,8 @@ export default function Pricing() {
     const [loading, setLoading] = useState(false);
     const [sub, setSub] = useState(null);
     const [planType, setPlanType] = useState('monthly');
+    const [charityPercentage, setCharityPercentage] = useState(10);
+    const [selectedCharity, setSelectedCharity] = useState(null);
     const navigate = useNavigate();
     const { user } = useAuth();
 
@@ -16,12 +18,23 @@ export default function Pricing() {
                 setSub(res.data.subscription);
             }
         });
+
+        // Fetch explicit charity parameters structurally guaranteeing financial transparency
+        api.get('/user/profile').then(res => {
+            if (res.data.profile) {
+                setCharityPercentage(res.data.profile.charity_percentage || 10);
+                setSelectedCharity(res.data.profile.charities?.name || 'Your Default Charity');
+            }
+        });
     }, []);
 
     const handleSubscribe = async () => {
         if (sub) return;
         setLoading(true);
         try {
+            // First mathematically commit any slider changes natively to the Backend securely
+            await api.put('/user/profile', { charity_percentage: charityPercentage });
+
             const { data: orderData } = await api.post('/payment/create-order', { type: planType });
 
             const options = {
@@ -88,6 +101,32 @@ export default function Pricing() {
                                 <li className="flex items-center gap-4 text-lg"><Check className="text-green-400 shrink-0" size={22} /> <span className="font-medium">Direct a percentage of your fee to your chosen charity</span></li>
                                 <li className="flex items-center gap-4 text-lg"><Check className="text-green-400 shrink-0" size={22} /> <span className="font-medium">Secure checkout via Razorpay integration</span></li>
                             </ul>
+
+                            {!sub && (
+                                <div className="mt-8 bg-indigo-900 bg-opacity-60 p-6 rounded-2xl border border-indigo-700 shadow-inner">
+                                    <div className="flex justify-between items-end mb-2">
+                                        <h3 className="text-white font-bold text-lg leading-none">Your Charity Split</h3>
+                                        <span className="text-indigo-200 font-extrabold text-xl leading-none">{charityPercentage}%</span>
+                                    </div>
+                                    <p className="text-xs text-indigo-300 mb-4">You may voluntarily increase your contribution before checkout securely.</p>
+                                    <input
+                                        type="range"
+                                        min="10"
+                                        max="100"
+                                        value={charityPercentage}
+                                        onChange={e => setCharityPercentage(parseInt(e.target.value))}
+                                        className="w-full accent-indigo-400 h-2 bg-indigo-950 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                    <div className="flex justify-between text-xs font-bold text-indigo-400 mt-2 px-1 mb-4">
+                                        <span>10% Min</span>
+                                        <span>100% Max</span>
+                                    </div>
+                                    <p className="text-sm text-indigo-200 font-medium bg-indigo-950 bg-opacity-50 p-3 rounded-lg border border-indigo-800">
+                                        Exactly <strong className="text-white">₹{((planType === 'yearly' ? 8000 : 800) * (charityPercentage / 100)).toFixed(0)}</strong> of this transaction will systematically go straight to <strong className="text-white truncate block mt-1">{selectedCharity}</strong>.
+                                    </p>
+                                </div>
+                            )}
+
                         </div>
                     </div>
 
