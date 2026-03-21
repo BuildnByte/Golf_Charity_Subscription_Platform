@@ -73,15 +73,12 @@ export default function AdminCharitiesPanel() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-12">
-            <nav className="bg-indigo-900 text-white px-8 py-4 flex justify-between items-center shadow-md">
-                <div className="flex items-center gap-4">
-                    <Link to="/admin" className="text-indigo-200 hover:text-white transition-colors"><ArrowLeft size={20} /></Link>
-                    <h1 className="text-xl font-bold flex items-center gap-2"><Heart className="fill-pink-500 text-pink-500" /> Charity Management</h1>
-                </div>
-            </nav>
-
+        <div className="min-h-screen bg-transparent pb-12">
             <div className="max-w-6xl mx-auto px-4 mt-8">
+                <Link to="/admin" className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6 transition-colors font-medium">
+                    <ArrowLeft size={16} /> Admin Dashboard
+                </Link>
+
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h2 className="text-3xl font-black text-gray-900 tracking-tight">Charity Directory</h2>

@@ -46,13 +46,8 @@ export default function AdminDashboard() {
             alert('Failed to reject application');
         }
     };
-
     return (
-        <div className="min-h-screen bg-gray-50 pb-12">
-            <nav className="bg-indigo-900 text-white px-8 py-4 flex justify-between">
-                <h1 className="text-xl font-bold flex items-center gap-2"><LayoutDashboard /> Admin Hub</h1>
-                <Link to="/" className="text-sm text-indigo-200 hover:text-white">Exit Admin</Link>
-            </nav>
+        <div className="min-h-screen bg-transparent pb-12">
 
             <div className="max-w-7xl mx-auto px-4 mt-8 space-y-8">
 

@@ -85,16 +85,11 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6">
-            <div className="max-w-6xl mx-auto">
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Welcome, {user?.email?.split('@')[0]}</h1>
-                        <p className="text-gray-500 mt-1 font-medium">Manage your entries and monitor your account.</p>
-                    </div>
-                    <button onClick={logout} className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-bold hover:bg-gray-50 transition-colors shadow-sm">
-                        Sign out
-                    </button>
+        <div className="min-h-screen bg-transparent py-12 px-4 sm:px-6">
+            <div className="max-w-7xl mx-auto">
+                <div className="mb-8">
+                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Dashboard Overview</h1>
+                    <p className="text-gray-500 mt-1 font-medium">Manage your entries and monitor your account.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -158,12 +153,20 @@ export default function Dashboard() {
                 {/* Secure Charity Management Controller */}
                 {charityProfile && (
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-                        <div className="flex justify-between items-start flex-col gap-4 md:flex-row md:items-center">
+                        <div className="flex justify-between items-start flex-col gap-4 md:flex-row md:items-start">
                             <div>
                                 <h2 className="text-2xl font-black text-gray-900">My Supported Charity</h2>
-                                <p className="text-gray-500 text-sm mt-1">Configure exactly where your next automated subscription Split goes.</p>
+                                <p className="text-gray-500 text-sm mt-1 mb-2">
+                                    Configure exactly where your automated subscription split goes.
+                                </p>
+                                <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg max-w-xl">
+                                    <p className="text-xs text-blue-800 font-medium leading-relaxed">
+                                        <span className="font-bold block mb-1">How it works:</span>
+                                        Your selected split percentage ({charityProfile.charity_percentage}%) is automatically deducted from your subscription payment and donated directly to your chosen charity. If you change your charity mid-cycle, the new selection will take effect only on your <strong>next subscription purchase</strong>.
+                                    </p>
+                                </div>
                             </div>
-                            <div className="bg-rose-50 border border-rose-100 text-rose-800 px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide">
+                            <div className="bg-rose-50 border border-rose-100 text-rose-800 px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide shrink-0">
                                 Active Split: {charityProfile.charity_percentage}%
                             </div>
                         </div>

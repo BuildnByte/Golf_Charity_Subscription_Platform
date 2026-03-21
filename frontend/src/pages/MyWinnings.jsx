@@ -54,11 +54,8 @@ export default function MyWinnings() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6">
-            <div className="max-w-4xl mx-auto">
-                <Link to="/dashboard" className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-8 font-medium">
-                    <ArrowLeft size={16} /> Back to Dashboard
-                </Link>
+        <div className="min-h-screen bg-transparent py-12 px-4 sm:px-6">
+            <div className="max-w-7xl mx-auto">
 
                 <h1 className="text-3xl font-extrabold text-gray-900 mb-2">My Winnings</h1>
                 <p className="text-gray-600 mb-8">Upload a screenshot of your ID to verify your identity and receive your payouts.</p>

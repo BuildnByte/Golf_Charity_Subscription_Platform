@@ -72,11 +72,8 @@ export default function Pricing() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-            <div className="max-w-5xl w-full">
-                <Link to="/dashboard" className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6 font-bold cursor-pointer transition-colors w-max">
-                    <ArrowLeft size={16} /> Dashboard
-                </Link>
+        <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-4">
+            <div className="max-w-7xl w-full">
 
                 {sub && (
                     <div className="bg-green-50 border-l-4 border-green-500 text-green-900 p-5 mb-8 flex items-center gap-4 shadow-sm">

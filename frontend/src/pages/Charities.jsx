@@ -118,19 +118,15 @@ export default function Charities() {
     if (loading) return <div className="min-h-screen bg-gray-50 flex justify-center items-center"><div className="animate-pulse text-indigo-500 font-bold">Loading charities...</div></div>;
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 relative">
-            <div className={`max-w-6xl mx-auto transition-all ${isModalOpen ? 'blur-sm pointer-events-none scale-[0.99] opacity-70 border-none select-none' : ''}`}>
-                <Link to="/dashboard" className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-8 font-bold transition-colors">
-                    <ArrowLeft size={16} /> Dashboard
-                </Link>
-
+        <div className="min-h-screen bg-transparent py-12 px-4 sm:px-6 relative">
+            <div className={`max-w-7xl mx-auto transition-all ${isModalOpen ? 'blur-sm pointer-events-none scale-[0.99] opacity-70 border-none select-none' : ''}`}>
                 <div className="mb-10 text-center">
                     <h1 className="text-4xl font-black text-gray-900 tracking-tight font-sans">Charity Directory</h1>
                     <p className="mt-3 text-gray-600 font-medium">Select an organization to receive a percentage of your subscription fee.</p>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8 flex flex-col md:flex-row gap-8 items-center justify-between">
-                    <div className="relative w-full md:w-1/2">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8 flex flex-col items-center justify-between">
+                    <div className="relative w-full">
                         <Search className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400" size={20} />
                         <input
                             type="text"
@@ -139,22 +135,6 @@ export default function Charities() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-gray-50 pl-12 pr-4 py-3.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium transition-all text-gray-800"
                         />
-                    </div>
-
-                    <div className="w-full md:w-1/2 bg-indigo-50 p-5 rounded-xl border border-indigo-100 flex flex-col gap-3">
-                        <div className="flex justify-between items-center text-indigo-900">
-                            <h3 className="font-bold flex items-center gap-2"><SlidersHorizontal size={18} /> Charity Allocation</h3>
-                            <span className="font-black text-2xl tracking-tighter">{percentage}%</span>
-                        </div>
-                        <input
-                            type="range"
-                            min="10"
-                            max="100"
-                            value={percentage}
-                            onChange={(e) => setPercentage(Number(e.target.value))}
-                            className="w-full accent-indigo-600 cursor-pointer h-2 bg-indigo-200 rounded-lg appearance-none"
-                        />
-                        <p className="text-xs text-indigo-700 font-medium">Adjust the percentage of your subscription fee that goes directly to your selected charity. Minimum is 10%.</p>
                     </div>
                 </div>
 
