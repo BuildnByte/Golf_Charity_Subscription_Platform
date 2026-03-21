@@ -119,6 +119,10 @@ async function calculateDrawLogic(supabase, strategy, manualNumbers) {
     const { data: allScores, error: scoresError } = await supabase.from('scores').select('user_id, score, date');
     if (scoresError) throw new Error(scoresError.message);
 
+    const { data: activeSubs, error: subsError } = await supabase.from('subscriptions').select('user_id').eq('status', 'active');
+    if (subsError) throw new Error(subsError.message);
+    const activeSubUsers = new Set(activeSubs.map(s => s.user_id));
+
     const userScoresMap = {};
     allScores.forEach(s => {
         if (!userScoresMap[s.user_id]) userScoresMap[s.user_id] = [];
@@ -127,7 +131,7 @@ async function calculateDrawLogic(supabase, strategy, manualNumbers) {
 
     const validParticipants = [];
     for (const [userId, scores] of Object.entries(userScoresMap)) {
-        if (scores.length >= 5) {
+        if (scores.length >= 5 && activeSubUsers.has(userId)) {
             validParticipants.push({ userId, scores: scores.slice(-5) });
         }
     }
@@ -213,11 +217,28 @@ router.post('/draw/simulate', async (req, res) => {
     }
 });
 
+router.get('/draws/scheduled', async (req, res) => {
+    const supabase = getClient(req);
+    const { data, error } = await supabase.from('draws').select('*').order('date', { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ draws: data });
+});
+
+router.post('/draws/schedule', async (req, res) => {
+    const supabase = getClient(req);
+    const { date } = req.body;
+    if (!date) return res.status(400).json({ error: 'Date strictly required.' });
+    const { data, error } = await supabase.from('draws').insert([{ date, status: 'upcoming', total_prize_pool: 0, jackpot_rollover: 0 }]).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ message: 'Draw explicitly scheduled', draw: data });
+});
+
 router.post('/draw/publish', async (req, res) => {
     try {
         const supabase = getClient(req);
-        const { numbers } = req.body;
+        const { draw_id, numbers } = req.body;
 
+        if (!draw_id) return res.status(400).json({ error: 'draw_id is required to explicitly update a Scheduled Draw container.' });
         if (!numbers || !Array.isArray(numbers) || numbers.length !== 5) {
             return res.status(400).json({ error: 'Must provide exactly 5 simulated numbers to publish' });
         }
@@ -226,13 +247,13 @@ router.post('/draw/publish', async (req, res) => {
 
         const { data: drawRecord, error: drawError } = await supabase
             .from('draws')
-            .insert([{
-                date: new Date().toISOString().split('T')[0],
+            .update({
                 numbers: result.drawNumbers,
-                status: 'drawn',
+                status: 'published',
                 total_prize_pool: result.stats.totalRevenue,
                 jackpot_rollover: result.stats.nextRollover
-            }])
+            })
+            .eq('id', draw_id)
             .select()
             .single();
 

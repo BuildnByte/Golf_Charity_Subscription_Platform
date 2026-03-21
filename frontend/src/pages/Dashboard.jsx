@@ -11,11 +11,12 @@ export default function Dashboard() {
 
     const [scores, setScores] = useState([]);
 
-    // Charity preferences state structurally loaded natively
     const [charityProfile, setCharityProfile] = useState(null);
     const [charityList, setCharityList] = useState([]);
     const [isEditingCharity, setIsEditingCharity] = useState(false);
     const [tempCharityId, setTempCharityId] = useState('');
+
+    const [drawsList, setDrawsList] = useState([]);
 
     const fetchScores = async () => {
         if (!user) return;
@@ -41,6 +42,11 @@ export default function Dashboard() {
 
                 const charitiesRes = await api.get('/charities');
                 setCharityList(charitiesRes.data.charities);
+
+                try {
+                    const drawsRes = await api.get('/user/draws');
+                    setDrawsList(drawsRes.data.draws);
+                } catch (e) { console.error("Could not fetch schedules") }
             } catch (err) {
                 console.error(err);
             } finally {
@@ -64,6 +70,19 @@ export default function Dashboard() {
 
     const isSubActive = sub?.status === 'active';
     const subEndDate = sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : 'N/A';
+
+    const activeDraws = drawsList.filter(d => d.status === 'upcoming' || d.status === 'active');
+    const upcomingDraw = activeDraws.length > 0 ? activeDraws[activeDraws.length - 1] : null;
+    const pastDraws = drawsList.filter(d => d.status === 'published' || d.status === 'drawn');
+
+    let eligibility = 'Ineligible';
+    if (isSubActive) {
+        if (scores.length >= 5) {
+            eligibility = 'Eligible';
+        } else {
+            eligibility = 'Incomplete';
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6">
@@ -208,7 +227,7 @@ export default function Dashboard() {
                 )}
 
                 {/* Score Entry Form Integration */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
                     {!isSubActive && (
                         <div className="mb-6 bg-red-50 border-1 border-red-200 p-4 rounded-xl text-red-700 flex flex-col justify-center items-center text-center">
                             <p className="font-bold mb-1">Subscription Required</p>
@@ -245,6 +264,54 @@ export default function Dashboard() {
                         )}
                     </div>
 
+                </div>
+
+                {/* Draw Participation Engine Widgets */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div className="lg:col-span-1 bg-white p-7 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full">
+                        <h3 className="font-black text-gray-900 mb-6 block text-xl">Upcoming Draw</h3>
+                        {upcomingDraw ? (
+                            <div className="flex-1 bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center flex flex-col justify-center items-center relative overflow-hidden shadow-inner">
+                                <p className="text-indigo-900 font-extrabold text-[42px] leading-tight mb-1">{new Date(upcomingDraw.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+                                <p className="text-indigo-600 font-bold text-xs tracking-[0.2em] uppercase mb-6 opacity-80">Target Lock-in</p>
+
+                                {eligibility === 'Eligible' && <span className="bg-green-500 text-white font-black text-xs px-4 py-2 rounded-lg shadow-md uppercase tracking-wide flex items-center gap-1"><CheckCircle size={14} /> Status: Eligible</span>}
+                                {eligibility === 'Incomplete' && <span className="bg-amber-500 text-white font-black text-xs px-4 py-2 rounded-lg shadow-md uppercase tracking-wide">Status: Incomplete <br /><span className="text-[10px] opacity-90 mt-0.5 block">Enter {5 - scores.length} more scores!</span></span>}
+                                {eligibility === 'Ineligible' && <span className="bg-red-500 text-white font-black text-xs px-4 py-2 rounded-lg shadow-md uppercase tracking-wide">Status: Ineligible <br /><span className="text-[10px] opacity-90 mt-0.5 block">Requires Active Sub</span></span>}
+                            </div>
+                        ) : (
+                            <div className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center flex flex-col justify-center items-center">
+                                <History size={32} className="text-gray-300 mb-3" />
+                                <p className="text-gray-500 font-bold">No draws scheduled currently.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="lg:col-span-2 bg-white p-7 rounded-2xl shadow-sm border border-gray-100">
+                        <h3 className="font-black text-gray-900 mb-6 block text-xl">Participation History</h3>
+                        {pastDraws.length === 0 ? (
+                            <div className="h-40 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl">
+                                <p className="text-gray-400 font-bold">No past draws on record.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
+                                {pastDraws.map(d => (
+                                    <div key={d.id} className="flex justify-between items-center p-4 rounded-xl border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center font-black">
+                                                <CalendarClock size={20} />
+                                            </div>
+                                            <div>
+                                                <span className="font-extrabold text-gray-900 block">{new Date(d.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                                <span className="text-xs text-gray-500 font-medium tracking-wide">Official Sequence</span>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg tracking-widest">{d.status}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

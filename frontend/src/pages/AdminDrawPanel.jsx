@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { api } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Play, ShieldAlert, ArrowLeft, RefreshCw, BarChart2, CheckCircle2, Trophy, Users } from 'lucide-react';
+import { Play, ShieldAlert, ArrowLeft, RefreshCw, BarChart2, CheckCircle2, Trophy, Users, AlertTriangle, CalendarPlus } from 'lucide-react';
 
 export default function AdminDrawPanel() {
     const [loading, setLoading] = useState(false);
@@ -13,9 +13,41 @@ export default function AdminDrawPanel() {
     const [manualMode, setManualMode] = useState(false);
     const [manualInput, setManualInput] = useState('');
 
+    // Scheduling State
+    const [scheduledDraws, setScheduledDraws] = useState([]);
+    const [scheduleDate, setScheduleDate] = useState('');
+    const [selectedDrawId, setSelectedDrawId] = useState('');
+
     const navigate = useNavigate();
 
+    useEffect(() => {
+        fetchDraws();
+    }, []);
+
+    const fetchDraws = async () => {
+        try {
+            const res = await api.get('/admin/draws/scheduled');
+            setScheduledDraws(res.data.draws);
+        } catch (err) {
+            console.error('Failed to fetch scheduled draws');
+        }
+    };
+
+    const handleScheduleDraw = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post('/admin/draws/schedule', { date: scheduleDate });
+            setScheduleDate('');
+            fetchDraws();
+            alert('Draw successfully scheduled!');
+        } catch (err) {
+            alert(err.response?.data?.error || 'Failed to schedule draw');
+        }
+    };
+
     const handleSimulate = async () => {
+        if (!selectedDrawId) return setError("Please select a target Scheduled Draw before simulating constraints.");
+
         setLoading(true);
         setError('');
         setSimulation(null);
@@ -33,7 +65,7 @@ export default function AdminDrawPanel() {
 
         try {
             const res = await api.post('/admin/draw/simulate', payload);
-            setSimulation(res.data.simulation);
+            setSimulation({ ...res.data.simulation, targetDrawId: selectedDrawId });
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to simulate draw.');
         } finally {
@@ -42,14 +74,14 @@ export default function AdminDrawPanel() {
     };
 
     const handlePublish = async () => {
-        if (!simulation) return;
+        if (!simulation || !simulation.targetDrawId) return;
         if (!window.confirm('WARNING: You are about to officially publish these numbers! This will permanently deduct jackpots and alert winners. Proceed?')) return;
 
         setPublishLoading(true);
         setError('');
 
         try {
-            const res = await api.post('/admin/draw/publish', { numbers: simulation.drawNumbers });
+            const res = await api.post('/admin/draw/publish', { numbers: simulation.drawNumbers, draw_id: simulation.targetDrawId });
             alert('Draw Published Successfully!');
             navigate('/admin');
         } catch (err) {
@@ -59,26 +91,106 @@ export default function AdminDrawPanel() {
         }
     };
 
+    const activeDraws = scheduledDraws.filter(d => d.status === 'upcoming');
+
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6">
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 <button onClick={() => navigate('/admin')} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6 transition-colors font-medium">
                     <ArrowLeft size={16} /> Dashboard
                 </button>
 
-                <div className="flex items-center gap-3 mb-8">
-                    <ShieldAlert className="text-indigo-600" size={32} />
-                    <h1 className="text-3xl font-extrabold text-gray-900">Advanced Draw Engine</h1>
+                <div className="flex justify-between items-end mb-8">
+                    <div className="flex items-center gap-3">
+                        <ShieldAlert className="text-indigo-600" size={32} />
+                        <h1 className="text-3xl font-extrabold text-gray-900">Advanced Draw Engine & Scheduler</h1>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                    {/* Controls Panel */}
-                    <div className="md:col-span-1 border border-gray-200 bg-white rounded-2xl shadow-sm p-6 max-h-fit">
-                        <h2 className="text-lg font-black tracking-tight mb-4">1. Configure Logic</h2>
+                    {/* Left Column: Scheduler & Selector */}
+                    <div className="lg:col-span-1 flex flex-col gap-6">
+
+                        {/* Scheduler Tool */}
+                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+                            <h2 className="text-lg font-black tracking-tight mb-4 flex items-center gap-2"><CalendarPlus size={20} className="text-indigo-600" /> Schedule Draw</h2>
+                            <form onSubmit={handleScheduleDraw} className="flex flex-col gap-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Target Run Date</label>
+                                    <input
+                                        type="date"
+                                        required
+                                        value={scheduleDate}
+                                        onChange={(e) => setScheduleDate(e.target.value)}
+                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 font-medium font-sans"
+                                    />
+                                </div>
+                                <button type="submit" className="w-full py-2.5 bg-indigo-50 text-indigo-700 font-bold rounded-xl hover:bg-indigo-100 transition-colors border border-indigo-200">
+                                    Queue Upcoming Draw
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* Overdue/Active List */}
+                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 flex-1">
+                            <h2 className="text-lg font-black tracking-tight mb-4">Pending Execution</h2>
+                            {activeDraws.length === 0 ? (
+                                <p className="text-sm text-gray-500 font-medium italic">No pending draws scheduled.</p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {activeDraws.map(d => {
+                                        const dateVal = new Date(d.date);
+                                        const isOverdue = dateVal < new Date(new Date().setHours(0, 0, 0, 0));
+                                        return (
+                                            <div
+                                                key={d.id}
+                                                className={`p-3 rounded-xl border ${isOverdue ? 'border-red-300 bg-red-50 relative' : 'border-gray-100 bg-gray-50'} transition-all`}
+                                            >
+                                                {isOverdue && <div className="absolute -top-2.5 -right-2.5 bg-red-500 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full shadow-sm animate-pulse flex items-center gap-1"><AlertTriangle size={10} /> Overdue</div>}
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className={`font-black tracking-tight ${isOverdue ? 'text-red-900' : 'text-gray-900'}`}>{dateVal.toLocaleDateString()}</p>
+                                                        <p className={`text-xs font-medium ${isOverdue ? 'text-red-700' : 'text-gray-500'}`}>Status: Upcoming</p>
+                                                    </div>
+                                                    {isOverdue && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedDrawId(d.id);
+                                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                            }}
+                                                            className="px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 shadow-sm"
+                                                        >
+                                                            Select to Execute
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Middle Column: Simulator Controls */}
+                    <div className="lg:col-span-1 border border-gray-200 bg-white rounded-2xl shadow-sm p-6">
+                        <h2 className="text-lg font-black tracking-tight mb-6 flex items-center gap-2"><Trophy size={20} className="text-rose-500" /> Target Configuration</h2>
 
                         <div className="space-y-4 mb-6">
-                            <label className="block text-sm font-bold text-gray-700">Algorithmic Strategy</label>
+                            <label className="block text-sm font-bold text-gray-800">1. Target Draw <span className="text-red-500">*</span></label>
+                            <select
+                                value={selectedDrawId}
+                                onChange={(e) => setSelectedDrawId(e.target.value)}
+                                className={`w-full px-4 py-3 bg-white border-2 rounded-xl focus:ring-0 focus:border-indigo-500 font-bold ${!selectedDrawId ? 'border-rose-400 text-rose-900 bg-rose-50' : 'border-gray-200 text-gray-900'}`}
+                            >
+                                <option disabled value="">-- Explicitly Required --</option>
+                                {activeDraws.map(d => <option key={d.id} value={d.id}>{new Date(d.date).toLocaleDateString()}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="space-y-4 mb-6">
+                            <label className="block text-sm font-bold text-gray-800">2. Algorithmic Strategy</label>
                             <select
                                 value={strategy}
                                 onChange={(e) => setStrategy(e.target.value)}
@@ -90,9 +202,7 @@ export default function AdminDrawPanel() {
                                 <option value="most_frequent">Most Frequent (Easiest)</option>
                             </select>
                             <p className="text-xs text-gray-500 font-medium leading-relaxed">
-                                {strategy === 'random' && "Generates 5 pure cryptographic random numbers."}
-                                {strategy === 'least_frequent' && "Parses database for numbers chosen least by users to maximize jackpot rollover."}
-                                {strategy === 'most_frequent' && "Selects the most popular user choices causing maximum payout distribution."}
+                                Predicts outcomes automatically bypassing native true-random numbers.
                             </p>
                         </div>
 
@@ -116,109 +226,69 @@ export default function AdminDrawPanel() {
 
                         <button
                             onClick={handleSimulate}
-                            disabled={loading || publishLoading}
-                            className="flex items-center justify-center w-full gap-2 px-6 py-3.5 bg-gray-900 text-white rounded-xl hover:bg-black disabled:opacity-50 transition-colors font-black tracking-wide shadow-md"
+                            disabled={loading || publishLoading || !selectedDrawId}
+                            className={`flex items-center justify-center w-full gap-2 px-6 py-3.5 rounded-xl transition-colors font-black tracking-wide shadow-md ${!selectedDrawId ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gray-900 text-white hover:bg-black'}`}
                         >
                             <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
                             {loading ? 'Simulating...' : 'Run Simulation'}
                         </button>
 
-                        {error && <div className="mt-4 p-3 bg-red-50 text-red-700 font-medium text-sm rounded-lg border border-red-200">{error}</div>}
+                        {error && <div className="mt-4 p-3 bg-red-50 text-red-700 font-bold text-sm rounded-lg border border-red-200 shadow-inner">{error}</div>}
                     </div>
 
-                    {/* Simulation Preview Area */}
-                    <div className="md:col-span-2 space-y-6">
+                    {/* Right Column: Simulation Preview Area */}
+                    <div className="lg:col-span-1 space-y-6 flex flex-col h-full">
                         {!simulation ? (
-                            <div className="h-full border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center p-12 text-center text-gray-400">
+                            <div className="flex-1 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center p-8 text-center text-gray-400 bg-gray-50/50">
                                 <BarChart2 size={48} className="mb-4 opacity-50" />
-                                <h3 className="text-lg font-bold">Awaiting Simulation...</h3>
-                                <p className="text-sm font-medium mt-1">Run a simulation dry-run to preview potential payouts and winners before official publication.</p>
+                                <h3 className="text-lg font-bold">Awaiting Prediction</h3>
+                                <p className="text-sm font-medium mt-1">Select a Scheduled Draw and run a dry-simulation to unlock metrics.</p>
                             </div>
                         ) : (
-                            <div className="bg-white rounded-2xl border border-indigo-100 shadow-md overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-                                <div className="bg-indigo-600 p-6 flex justify-between items-center text-white">
-                                    <div>
-                                        <p className="text-indigo-200 text-xs font-black uppercase tracking-widest mb-1 shadow-sm">Predicted Results</p>
-                                        <h3 className="text-2xl font-extrabold flex items-center gap-3">
-                                            {simulation.drawNumbers.map((n, i) => (
-                                                <span key={i} className="inline-block px-3 py-1 bg-white/20 rounded-md backdrop-blur-sm shadow-inner">{n}</span>
-                                            ))}
-                                        </h3>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-indigo-200 text-sm font-medium">Valid Players</p>
-                                        <p className="text-3xl font-black">{simulation.validParticipantsCount}</p>
+                            <div className="bg-white rounded-2xl border border-indigo-100 shadow-xl overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300 flex-1 flex flex-col">
+                                <div className="bg-indigo-600 p-6 text-white text-center">
+                                    <p className="text-indigo-200 text-xs font-black uppercase tracking-widest mb-2">Simulated Array</p>
+                                    <div className="flex justify-center gap-2">
+                                        {simulation.drawNumbers.map((n, i) => (
+                                            <span key={i} className="w-10 h-10 flex items-center justify-center bg-white text-indigo-900 font-black rounded-full shadow-md text-lg">{n}</span>
+                                        ))}
                                     </div>
                                 </div>
 
-                                <div className="p-6">
-                                    <h4 className="text-gray-900 font-bold mb-4 uppercase tracking-wider text-sm flex items-center gap-2 bg-gray-50 py-2 px-3 rounded-md">
-                                        <Trophy size={16} /> Simulated Financials
-                                    </h4>
-
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                            <p className="text-gray-500 text-xs font-bold uppercase mb-1">Gross Yield</p>
+                                <div className="p-5 flex-1 flex flex-col">
+                                    <div className="grid grid-cols-2 gap-3 mb-6">
+                                        <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                            <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Gross Yield</p>
                                             <p className="text-lg font-black text-gray-900">${simulation.stats.totalRevenue}</p>
                                         </div>
-                                        <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                                            <p className="text-yellow-700 text-xs font-bold uppercase mb-1">Jackpot Pool</p>
+                                        <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100">
+                                            <p className="text-yellow-700 text-[10px] font-bold uppercase mb-1">Jackpot Pool</p>
                                             <p className="text-lg font-black text-yellow-900">${simulation.stats.pool5}</p>
                                         </div>
-                                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                            <p className="text-gray-500 text-xs font-bold uppercase mb-1">Prev Rollover</p>
-                                            <p className="text-lg font-black text-gray-900">${simulation.stats.previousRollover}</p>
+                                    </div>
+
+                                    <div className="space-y-2 mb-6 flex-1">
+                                        <div className="flex justify-between items-center p-2.5 rounded-lg border border-gray-100 bg-gray-50/50">
+                                            <span className="font-bold text-gray-700 text-[11px] uppercase tracking-wider">Tier 1 (5)</span>
+                                            <span className="font-black text-gray-900 text-sm">{simulation.stats.match5Count} <span className="font-medium text-gray-400 text-xs">wins</span></span>
                                         </div>
-                                        <div className="p-4 bg-green-50 rounded-xl border border-green-100">
-                                            <p className="text-green-700 text-xs font-bold uppercase mb-1">Next Rollover</p>
-                                            <p className="text-lg font-black text-green-900">${simulation.stats.nextRollover}</p>
+                                        <div className="flex justify-between items-center p-2.5 rounded-lg border border-gray-100 bg-gray-50/50">
+                                            <span className="font-bold text-gray-700 text-[11px] uppercase tracking-wider">Tier 2 (4)</span>
+                                            <span className="font-black text-gray-900 text-sm">{simulation.stats.match4Count} <span className="font-medium text-gray-400 text-xs">wins</span></span>
+                                        </div>
+                                        <div className="flex justify-between items-center p-2.5 rounded-lg border border-gray-100 bg-gray-50/50">
+                                            <span className="font-bold text-gray-700 text-[11px] uppercase tracking-wider">Tier 3 (3)</span>
+                                            <span className="font-black text-gray-900 text-sm">{simulation.stats.match3Count} <span className="font-medium text-gray-400 text-xs">wins</span></span>
                                         </div>
                                     </div>
 
-                                    <h4 className="text-gray-900 font-bold mb-4 uppercase tracking-wider text-sm flex items-center gap-2 bg-gray-50 py-2 px-3 rounded-md">
-                                        <Users size={16} /> Projected Winners
-                                    </h4>
-
-                                    <div className="space-y-3 mb-8">
-                                        <div className="flex justify-between items-center p-3 rounded-lg border border-gray-100">
-                                            <span className="font-bold text-gray-700 text-sm w-32">5-Match (Tier 1)</span>
-                                            <span className="font-black text-gray-900 w-16 text-center">{simulation.stats.match5Count}</span>
-                                            <span className="font-bold text-green-600 text-right w-32">${simulation.stats.prize5.toFixed(2)} ea</span>
-                                        </div>
-                                        <div className="flex justify-between items-center p-3 rounded-lg border border-gray-100">
-                                            <span className="font-bold text-gray-700 text-sm w-32">4-Match (Tier 2)</span>
-                                            <span className="font-black text-gray-900 w-16 text-center">{simulation.stats.match4Count}</span>
-                                            <span className="font-bold text-green-600 text-right w-32">${simulation.stats.prize4.toFixed(2)} ea</span>
-                                        </div>
-                                        <div className="flex justify-between items-center p-3 rounded-lg border border-gray-100">
-                                            <span className="font-bold text-gray-700 text-sm w-32">3-Match (Tier 3)</span>
-                                            <span className="font-black text-gray-900 w-16 text-center">{simulation.stats.match3Count}</span>
-                                            <span className="font-bold text-green-600 text-right w-32">${simulation.stats.prize3.toFixed(2)} ea</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-rose-50 border border-rose-100 rounded-xl p-5 mb-6 shadow-sm">
-                                        <p className="text-rose-800 text-sm font-bold flex items-center gap-2 mb-2"><ShieldAlert size={16} /> Approval Required</p>
-                                        <p className="text-rose-700 text-xs font-medium leading-relaxed">
-                                            Review the metrics above carefully. Proceeding will formally publish these numbers, execute the corresponding database transactions, deduct payouts, and instantly alert users of their new status. This action is absolutely irreversible.
-                                        </p>
-                                    </div>
-
-                                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                                        <button
-                                            onClick={() => setSimulation(null)}
-                                            className="px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
-                                        >
-                                            Discard Prediction
-                                        </button>
-                                        <button
-                                            onClick={handlePublish}
-                                            disabled={publishLoading}
-                                            className="px-8 py-3 bg-green-600 text-white font-black rounded-xl hover:bg-green-700 disabled:opacity-50 transition-colors shadow-lg shadow-green-200 flex items-center gap-2"
-                                        >
-                                            <CheckCircle2 size={18} /> {publishLoading ? 'Publishing...' : 'Finalize & Publish'}
-                                        </button>
-                                    </div>
+                                    <button
+                                        onClick={handlePublish}
+                                        disabled={publishLoading}
+                                        className="w-full py-4 bg-green-600 text-white font-black rounded-xl hover:bg-green-700 disabled:opacity-50 transition-colors shadow-lg shadow-green-200 flex items-center justify-center gap-2 uppercase tracking-widest text-sm"
+                                    >
+                                        <CheckCircle2 size={18} /> {publishLoading ? 'Publishing...' : 'Commit Sequence'}
+                                    </button>
                                 </div>
                             </div>
                         )}

@@ -71,4 +71,12 @@ router.put('/profile', async (req, res) => {
     res.json({ message: 'Charity Mapping and Allocations systematically secured and deployed.' });
 });
 
+// Fetch all draws natively mapped for user participation summaries
+router.get('/draws', async (req, res) => {
+    const supabase = getClient(req);
+    const { data, error } = await supabase.from('draws').select('*').order('date', { ascending: false });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ draws: data });
+});
+
 module.exports = router;
