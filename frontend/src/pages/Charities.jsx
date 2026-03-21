@@ -167,7 +167,7 @@ export default function Charities() {
 
                                     <div className="mb-6 bg-green-50/50 border border-green-100 px-4 py-2.5 rounded-xl flex justify-between items-center">
                                         <p className="text-xs font-bold text-green-800 uppercase tracking-widest">Total Capital Raised</p>
-                                        <p className="text-sm font-black text-green-600">₹{(charity.amount_raised || 0).toLocaleString()}</p>
+                                        <p className="text-sm font-black text-green-600">₹{Number(charity.amount_raised || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                                     </div>
 
                                     {charity.upcoming_events?.length > 0 && (

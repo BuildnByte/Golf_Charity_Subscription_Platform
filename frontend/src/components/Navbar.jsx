@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Trophy, Home, LayoutDashboard, CreditCard, Heart, LogOut, Menu, X, ShieldAlert, Award } from 'lucide-react';
+import { Trophy, Home, LayoutDashboard, CreditCard, Heart, LogOut, Menu, X, ShieldAlert, Award, Users } from 'lucide-react';
 
 export default function Navbar() {
     const { user, logout } = useAuth();
@@ -23,8 +23,8 @@ export default function Navbar() {
                 to={to}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all ${isActive
-                        ? 'bg-indigo-50 text-indigo-700 shadow-sm'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600'
+                    ? 'bg-indigo-50 text-indigo-700 shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600'
                     } ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
             >
                 <Icon size={18} className={isActive ? 'stroke-[2.5]' : 'stroke-2'} />
@@ -52,19 +52,30 @@ export default function Navbar() {
                                 <Link to="/login" className="px-5 py-2.5 text-gray-700 font-bold hover:text-indigo-600 hover:bg-gray-50 rounded-xl transition-colors">Sign In</Link>
                                 <Link to="/register" className="px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all ml-1">Get Started</Link>
                             </>
+                        ) : user.role === 'admin' ? (
+                            <>
+                                <NavLink to="/admin" icon={ShieldAlert} label="System Core" />
+                                <NavLink to="/admin/users" icon={Users} label="Director Matrix" />
+                                <NavLink to="/admin/draw" icon={Trophy} label="Draw Engine" />
+                                <NavLink to="/admin/charities" icon={Heart} label="Charities" />
+
+                                <div className="h-6 w-px bg-gray-200 mx-2"></div>
+
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex items-center gap-2 px-4 py-2.5 text-gray-500 font-bold hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                                    title="Sign Out"
+                                >
+                                    <LogOut size={18} />
+                                    <span className="sr-only">Sign Out</span>
+                                </button>
+                            </>
                         ) : (
                             <>
                                 <NavLink to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
                                 <NavLink to="/pricing" icon={CreditCard} label="Subscribe" />
                                 <NavLink to="/charities" icon={Heart} label="Charities" />
                                 <NavLink to="/my-winnings" icon={Award} label="My Winnings" />
-
-                                {user.role === 'admin' && (
-                                    <>
-                                        <div className="h-6 w-px bg-gray-200 mx-2"></div>
-                                        <NavLink to="/admin" icon={ShieldAlert} label="Admin" />
-                                    </>
-                                )}
 
                                 <div className="h-6 w-px bg-gray-200 mx-2"></div>
 
@@ -104,16 +115,28 @@ export default function Navbar() {
                                     Get Started
                                 </Link>
                             </>
+                        ) : user.role === 'admin' ? (
+                            <>
+                                <NavLink to="/admin" icon={ShieldAlert} label="System Core" />
+                                <NavLink to="/admin/users" icon={Users} label="Director Matrix" />
+                                <NavLink to="/admin/draw" icon={Trophy} label="Draw Engine" />
+                                <NavLink to="/admin/charities" icon={Heart} label="Charities" />
+
+                                <div className="h-px bg-gray-100 w-full my-4"></div>
+
+                                <button
+                                    onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                                    className="flex w-full items-center gap-2 px-4 py-3 text-red-600 font-bold hover:bg-red-50 rounded-xl transition-colors"
+                                >
+                                    <LogOut size={18} /> Sign Out
+                                </button>
+                            </>
                         ) : (
                             <>
                                 <NavLink to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
                                 <NavLink to="/pricing" icon={CreditCard} label="Subscribe" />
                                 <NavLink to="/charities" icon={Heart} label="Charities" />
                                 <NavLink to="/my-winnings" icon={Award} label="My Winnings" />
-
-                                {user.role === 'admin' && (
-                                    <NavLink to="/admin" icon={ShieldAlert} label="Admin Engine" />
-                                )}
 
                                 <div className="h-px bg-gray-100 w-full my-4"></div>
 

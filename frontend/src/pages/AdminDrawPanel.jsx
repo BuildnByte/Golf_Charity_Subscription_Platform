@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Play, ShieldAlert, ArrowLeft, RefreshCw, BarChart2, CheckCircle2, Trophy, Users, AlertTriangle, CalendarPlus } from 'lucide-react';
+import { Play, ShieldAlert, ArrowLeft, RefreshCw, BarChart2, CheckCircle2, Trophy, Users, AlertTriangle, CalendarPlus, Info } from 'lucide-react';
 
 export default function AdminDrawPanel() {
     const [loading, setLoading] = useState(false);
@@ -103,7 +103,21 @@ export default function AdminDrawPanel() {
                 <div className="flex justify-between items-end mb-8">
                     <div className="flex items-center gap-3">
                         <ShieldAlert className="text-indigo-600" size={32} />
-                        <h1 className="text-3xl font-extrabold text-gray-900">Advanced Draw Engine & Scheduler</h1>
+                        <div>
+                            <h1 className="text-3xl font-extrabold text-gray-900">Advanced Draw Engine & Scheduler</h1>
+
+                            <div className="group relative inline-flex items-center gap-2 cursor-pointer text-blue-600 mt-2">
+                                <Info size={16} />
+                                <span className="text-xs font-bold uppercase tracking-wider">How draw allocations work</span>
+
+                                <div className="absolute left-0 top-full mt-2 w-96 bg-gray-900 text-white text-xs p-4 rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 shadow-2xl border border-gray-700 pointer-events-none">
+                                    <p className="mb-2"><strong>Revenue Accumulation:</strong> The system automatically extracts the gross monthly fee (₹800/mo, or ₹8000/12 if yearly) from ALL Active Members, regardless of whether they submitted enough scores to be eligible to win.</p>
+                                    <p className="mb-2 text-pink-300"><strong>Charity Removal:</strong> Then, it computes each individual user's charity percentage uniquely and surgically deducts it from their portion into the structural foundation pipeline.</p>
+                                    <p className="text-green-300"><strong>Prize Siphon:</strong> Finally, exactly <strong>50%</strong> of the <em>Remaining Subgross Revenue</em> is definitively mathematically mapped into this Draw's Prize Pool, with the remainder kept cleanly as platform profit!</p>
+                                    <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-900 border-l border-t border-gray-700 transform rotate-45"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -259,11 +273,11 @@ export default function AdminDrawPanel() {
                                     <div className="grid grid-cols-2 gap-3 mb-6">
                                         <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
                                             <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Gross Yield</p>
-                                            <p className="text-lg font-black text-gray-900">${simulation.stats.totalRevenue}</p>
+                                            <p className="text-lg font-black text-gray-900">₹{Number(simulation.stats.totalRevenue).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                                         </div>
                                         <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100">
                                             <p className="text-yellow-700 text-[10px] font-bold uppercase mb-1">Jackpot Pool</p>
-                                            <p className="text-lg font-black text-yellow-900">${simulation.stats.pool5}</p>
+                                            <p className="text-lg font-black text-yellow-900">₹{Number(simulation.stats.pool5).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                                         </div>
                                     </div>
 

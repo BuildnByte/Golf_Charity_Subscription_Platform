@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { Trophy, CalendarClock, History, CheckCircle, XCircle } from 'lucide-react';
+import { Trophy, CalendarClock, History, CheckCircle, XCircle, Info } from 'lucide-react';
 import ScoreForm from '../components/ScoreForm';
 
 export default function Dashboard() {
@@ -159,11 +159,14 @@ export default function Dashboard() {
                                 <p className="text-gray-500 text-sm mt-1 mb-2">
                                     Configure exactly where your automated subscription split goes.
                                 </p>
-                                <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg max-w-xl">
-                                    <p className="text-xs text-blue-800 font-medium leading-relaxed">
-                                        <span className="font-bold block mb-1">How it works:</span>
+                                <div className="group relative inline-flex items-center gap-2 cursor-pointer text-blue-600 mb-2 mt-1">
+                                    <Info size={16} />
+                                    <span className="text-xs font-bold uppercase tracking-wider">How routing works</span>
+
+                                    <div className="absolute left-0 top-full mt-2 w-72 bg-gray-900 text-white text-xs p-3 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 shadow-xl border border-gray-700 pointer-events-none">
                                         Your selected split percentage ({charityProfile.charity_percentage}%) is automatically deducted from your subscription payment and donated directly to your chosen charity. If you change your charity mid-cycle, the new selection will take effect only on your <strong>next subscription purchase</strong>.
-                                    </p>
+                                        <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-900 border-l border-t border-gray-700 transform rotate-45"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div className="bg-rose-50 border border-rose-100 text-rose-800 px-5 py-2.5 rounded-xl font-bold text-sm tracking-wide shrink-0">

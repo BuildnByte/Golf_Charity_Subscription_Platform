@@ -8,6 +8,7 @@ import Charities from './pages/Charities';
 import AdminDrawPanel from './pages/AdminDrawPanel';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCharitiesPanel from './pages/AdminCharitiesPanel';
+import AdminUserPanel from './pages/AdminUserPanel';
 import MyWinnings from './pages/MyWinnings';
 import Pricing from './pages/Pricing';
 import Home from './pages/Home';
@@ -49,6 +50,7 @@ function App() {
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/draw" element={<AdminRoute><AdminDrawPanel /></AdminRoute>} />
               <Route path="/admin/charities" element={<AdminRoute><AdminCharitiesPanel /></AdminRoute>} />
+              <Route path="/admin/users" element={<AdminRoute><AdminUserPanel /></AdminRoute>} />
             </Routes>
           </main>
         </div>

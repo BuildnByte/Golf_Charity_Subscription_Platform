@@ -53,9 +53,12 @@ export default function AdminDashboard() {
 
                 <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-extrabold text-gray-900">Dashboard Overview</h2>
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 flex-wrap">
                         <Link to="/admin/charities" className="bg-pink-600 text-white px-6 py-2 rounded-lg flex gap-2 items-center hover:bg-pink-700 font-bold tracking-wide shadow-md">
                             <Heart size={18} className="fill-white" /> Manage Charities
+                        </Link>
+                        <Link to="/admin/users" className="bg-blue-600 text-white px-6 py-2 rounded-lg flex gap-2 items-center hover:bg-blue-700 font-bold tracking-wide shadow-md">
+                            <Users size={18} /> Manage Users
                         </Link>
                         <Link to="/admin/draw" className="bg-indigo-600 text-white px-6 py-2 rounded-lg flex gap-2 items-center hover:bg-indigo-700 font-bold tracking-wide shadow-md">
                             <Play size={18} className="fill-white" /> Run Draw Engine
@@ -75,11 +78,11 @@ export default function AdminDashboard() {
                         </div>
                         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                             <p className="text-gray-500 text-sm">Global Prize Pool (Gross)</p>
-                            <p className="text-3xl font-bold text-green-600 mt-2">${stats.totalPrizePool}</p>
+                            <p className="text-3xl font-bold text-green-600 mt-2">₹{Number(stats.totalPrizePool).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                         </div>
                         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                             <p className="text-gray-500 text-sm">Charity Allocation</p>
-                            <p className="text-3xl font-bold text-pink-600 mt-2">${stats.totalCharity}</p>
+                            <p className="text-3xl font-bold text-pink-600 mt-2">₹{Number(stats.totalCharity).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                         </div>
                     </div>
                 )}
@@ -113,7 +116,7 @@ export default function AdminDashboard() {
                                                     {w.matched_details?.map((detail, idx) => <span key={idx} className="block">{detail}</span>)}
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-green-600 font-bold">${w.prize_amount}</td>
+                                            <td className="p-4 text-green-600 font-bold">₹{Number(w.prize_amount).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                                             <td className="p-4">
                                                 {w.screenshot_url ? <a href={w.screenshot_url} target="_blank" rel="noreferrer" className="text-indigo-600 font-medium hover:underline flex items-center gap-1">View Image <LayoutDashboard size={12} /></a> : <span className="text-gray-400 italic">Missing</span>}
                                             </td>

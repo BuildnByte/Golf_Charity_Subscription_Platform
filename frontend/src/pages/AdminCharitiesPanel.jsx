@@ -125,7 +125,7 @@ export default function AdminCharitiesPanel() {
                                             )}
                                         </td>
                                         <td className="p-4 text-right">
-                                            <span className="font-extrabold text-green-600 tracking-tight">₹{(c.amount_raised || 0).toLocaleString()}</span>
+                                            <span className="font-extrabold text-green-600 tracking-tight">₹{Number(c.amount_raised || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                                         </td>
                                         <td className="p-4 text-right">
                                             <div className="flex items-center justify-end gap-2">

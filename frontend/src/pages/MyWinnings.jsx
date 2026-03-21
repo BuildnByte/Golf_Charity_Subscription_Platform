@@ -72,7 +72,7 @@ export default function MyWinnings() {
                             <div key={w.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div>
                                     <p className="text-sm text-gray-500 mb-1">Draw Date: <span className="font-semibold text-gray-800">{w.draws?.date || 'Unknown'}</span></p>
-                                    <p className="text-2xl font-bold text-green-600">${w.prize_amount}</p>
+                                    <p className="text-2xl font-bold text-green-600">₹{Number(w.prize_amount).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                                     <p className="text-sm text-gray-600 mt-1">
                                         {w.match_count} Matches:
                                         <div className="mt-2 space-y-1">
